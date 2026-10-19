@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f6">
+  <title>Payflow — Excel to Word</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172522;
+      --muted: #6b7875;
+      --line: #e2e9e6;
+      --paper: #ffffff;
+      --canvas: #f5f7f6;
+      --green: #126b55;
+      --green-dark: #0d5543;
+      --green-soft: #e9f5f0;
+      --amber: #8a5d0b;
+      --amber-soft: #fff5dd;
+      --red: #a3443d;
+      --red-soft: #fff0ed;
+      --shadow: 0 12px 34px rgba(20, 48, 40, .055);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); font-size: 14px; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 236px minmax(0, 1fr); }
+    .sidebar { background: #fff; border-right: 1px solid var(--line); padding: 26px 18px; display: flex; flex-direction: column; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 9px 30px; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: var(--green); color: white; }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .brand-name { font-size: 17px; font-weight: 740; letter-spacing: -.04em; }
+    .brand-name span { color: var(--green); }
+    .side-label { padding: 0 10px; color: #9aa5a2; text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 750; margin-bottom: 9px; }
+    .nav-item { padding: 11px 12px; border-radius: 9px; display: flex; align-items: center; gap: 11px; color: #66736f; font-size: 13px; margin-bottom: 4px; }
+    .nav-item.active { background: var(--green-soft); color: var(--green-dark); font-weight: 670; }
+    .nav-icon { width: 17px; height: 17px; display: inline-grid; place-items: center; font-size: 15px; }
+    .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding: 17px 9px 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .privacy-dot { display: inline-block; width: 7px; height: 7px; background: #43a580; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+    main { min-width: 0; padding: 30px clamp(20px, 4.5vw, 68px) 60px; max-width: 1600px; width: 100%; margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 30px; }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb b { color: var(--ink); font-weight: 650; }
+    .help-link { color: var(--green); text-decoration: none; font-weight: 600; font-size: 12px; }
+    .intro { margin-bottom: 25px; }
+    .eyebrow { color: var(--green); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 750; margin-bottom: 9px; }
+    h1 { font-size: clamp(27px, 3vw, 34px); line-height: 1.15; letter-spacing: -.045em; margin: 0 0 8px; }
+    .intro p { color: var(--muted); margin: 0; font-size: 14px; line-height: 1.6; }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 5px; margin-bottom: 22px; }
+    .step { display: flex; align-items: center; gap: 10px; padding: 11px 13px; color: #899490; font-size: 12px; font-weight: 630; border-radius: 8px; }
+    .step.active { color: var(--green-dark); background: var(--green-soft); }
+    .step-num { width: 23px; height: 23px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 11px; flex: 0 0 auto; }
+    .step.done .step-num { background: var(--green); border-color: var(--green); color: white; }
+    .card { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); box-shadow: var(--shadow); margin-bottom: 18px; overflow: hidden; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+    .card-title { display: flex; align-items: center; gap: 10px; }
+    .card-title h2 { font-size: 14px; margin: 0; letter-spacing: -.01em; }
+    .section-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; color: var(--green); background: var(--green-soft); font-size: 11px; font-weight: 760; }
+    .card-subtitle { color: var(--muted); font-size: 11px; }
+    .card-body { padding: 21px 22px 23px; }
+    .drop-zone { border: 1.5px dashed #c7d5d0; border-radius: 11px; min-height: 145px; display: flex; justify-content: center; align-items: center; text-align: center; padding: 23px; background: #fbfdfc; transition: .15s ease; }
+    .drop-zone.dragover { background: var(--green-soft); border-color: var(--green); }
+    .upload-icon { width: 38px; height: 38px; border-radius: 12px; background: #eaf4f0; color: var(--green); margin: 0 auto 11px; display: grid; place-items: center; font-size: 19px; }
+    .drop-zone strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .drop-zone p { color: var(--muted); font-size: 11px; margin: 0 0 13px; }
+    .file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .button { border: 1px solid var(--line); color: #46534f; background: white; border-radius: 8px; padding: 9px 13px; font-size: 12px; font-weight: 650; transition: .15s ease; }
+    .button:hover { border-color: #b4c5be; background: #f9fbfa; }
+    .button.primary { color: white; background: var(--green); border-color: var(--green); padding: 11px 17px; }
+    .button.primary:hover:not(:disabled) { background: var(--green-dark); }
+    .button:disabled { cursor: not-allowed; opacity: .48; }
+    .file-summary { display: none; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 9px; margin-top: 14px; }
+    .file-summary.visible { display: flex; }
+    .file-meta { min-width: 0; display: flex; align-items: center; gap: 11px; }
+    .file-badge { display: grid; place-items: center; width: 34px; height: 38px; border-radius: 6px; background: #edf5f1; color: var(--green); font-size: 9px; font-weight: 800; }
+    .file-name { font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-details { color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .text-button { border: 0; background: transparent; color: var(--green); font-size: 11px; font-weight: 650; padding: 8px; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 17px; }
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field label { color: #475550; font-size: 11px; font-weight: 670; }
+    .field small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+    select, input[type="text"] { width: 100%; min-height: 37px; border: 1px solid #dbe3df; border-radius: 7px; padding: 8px 10px; outline: 0; background: white; color: var(--ink); font-size: 12px; }
+    select:focus, input[type="text"]:focus { border-color: #69a691; box-shadow: 0 0 0 3px rgba(18,107,85,.08); }
+    .inline-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 18px; }
+    .mapping-note { display: flex; align-items: flex-start; gap: 9px; border-radius: 8px; padding: 11px 13px; background: #f7faf8; color: #63716c; font-size: 11px; line-height: 1.5; margin: 17px 0 2px; }
+    .mapping-note b { color: #42514b; }
+    .mapping-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 18px; }
+    .mapping-grid .field { padding-bottom: 1px; }
+    .req { color: #bd5147; margin-left: 2px; }
+    .review-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 15px; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 10px; color: #66736f; background: white; }
+    .stat b { color: var(--ink); margin-right: 4px; font-size: 12px; }
+    .stat.warn b { color: var(--amber); }
+    .stat.error b { color: var(--red); }
+    .search { width: min(230px, 40%); position: relative; }
+    .search input { padding-left: 30px; }
+    .search:before { content: "⌕"; position: absolute; left: 11px; top: 6px; color: #82908b; font-size: 17px; z-index: 1; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 9px; }
+    table { border-collapse: collapse; width: 100%; min-width: 740px; }
+    th { text-align: left; color: #7b8783; text-transform: uppercase; letter-spacing: .075em; font-size: 9px; font-weight: 750; background: #f8faf9; padding: 10px 12px; white-space: nowrap; }
+    td { padding: 11px 12px; border-top: 1px solid #edf1ef; font-size: 11px; white-space: nowrap; }
+    td:first-child { font-weight: 640; }
+    .status { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 650; }
+    .status.ok { color: var(--green); }
+    .status.warn { color: var(--amber); }
+    .status.error { color: var(--red); }
+    .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .status-cell { white-space: normal; min-width: 190px; }
+    .status-detail { color: #6f7c77; font-size: 9px; line-height: 1.4; margin-top: 4px; max-width: 280px; white-space: normal; }
+    .table-empty { text-align: center; padding: 30px; color: var(--muted); }
+    .table-foot { display: flex; justify-content: space-between; align-items: center; padding: 10px 2px 0; color: var(--muted); font-size: 10px; }
+    .pagination { display: inline-flex; align-items: center; gap: 8px; }
+    .pagination button { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; color: #52615b; font-size: 10px; }
+    .pagination button:disabled { opacity: .45; cursor: default; }
+    .checkline { display: flex; gap: 9px; align-items: flex-start; color: #56645f; font-size: 11px; line-height: 1.45; margin-top: 14px; }
+    .checkline input { margin: 1px 0 0; accent-color: var(--green); }
+    .alert { display: none; padding: 11px 13px; border-radius: 8px; font-size: 11px; line-height: 1.45; margin-top: 13px; }
+    .alert.visible { display: block; }
+    .alert.error { color: #8e3731; background: var(--red-soft); }
+    .alert.success { color: #28664e; background: var(--green-soft); }
+    .export-body { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(250px, .8fr); gap: 22px; align-items: start; }
+    .export-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 13px; }
+    .export-preview { border-radius: 9px; border: 1px solid var(--line); background: #f9fbfa; padding: 15px 16px; }
+    .export-preview h3 { font-size: 11px; margin: 0 0 10px; }
+    .export-preview p { color: var(--muted); margin: 0; font-size: 10px; line-height: 1.55; }
+    .export-actions { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 18px; }
+    .export-hint { color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .hidden { display: none !important; }
+    .footer-note { text-align: center; color: #8b9692; font-size: 10px; margin-top: 28px; }
+    @media (max-width: 840px) {
+      .app { grid-template-columns: 62px minmax(0,1fr); }
+      .sidebar { padding: 20px 8px; align-items: center; }
+      .brand { padding: 0 0 27px; }
+      .brand-name, .side-label, .nav-text, .side-foot { display: none; }
+      .nav-item { padding: 12px; justify-content: center; }
+      main { padding: 23px 18px 48px; }
+    }
+    @media (max-width: 620px) {
+      .steps { grid-template-columns: 1fr; gap: 2px; }
+      .step { padding: 8px 10px; }
+      .controls, .inline-fields, .mapping-grid, .export-body, .export-options { grid-template-columns: 1fr; }
+      .review-toolbar, .export-actions { align-items: stretch; flex-direction: column; }
+      .search { width: 100%; }
+      .card-head, .card-body { padding-left: 15px; padding-right: 15px; }
+      .topbar { margin-bottom: 23px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 4.5h8l4 4v11H6v-15Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 4.8v4h4M9 12h6M9 15.5h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+        <div class="brand-name">pay<span>flow</span></div>
+      </div>
+      <div class="side-label">Workspace</div>
+      <div class="nav-item active"><span class="nav-icon">▤</span><span class="nav-text">New conversion</span></div>
+      <div class="nav-item"><span class="nav-icon">◷</span><span class="nav-text">How it works</span></div>
+      <div class="side-foot"><span class="privacy-dot"></span>Files stay in this browser. No payroll rows are uploaded.</div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <b>New conversion</b></div>
+        <a class="help-link" href="#privacy">Privacy &amp; data handling ↗</a>
+      </div>
+
+      <header class="intro">
+        <div class="eyebrow">Payroll document builder</div>
+        <h1>Excel to Word, with a review step.</h1>
+        <p>Bring in a payroll sheet, check each salary change, then prepare a Word summary for your records.</p>
+      </header>
+
+      <div class="steps" aria-label="Conversion steps">
+        <div class="step active" id="step1"><span class="step-num">1</span> Import workbook</div>
+        <div class="step" id="step2"><span class="step-num">2</span> Map columns</div>
+        <div class="step" id="step3"><span class="step-num">3</span> Review rows</div>
+        <div class="step" id="step4"><span class="step-num">4</span> Create Word file</div>
+      </div>
+
+      <section class="card" aria-labelledby="import-heading">
+        <div class="card-head">
+          <div class="card-title"><span class="section-number">01</span><h2 id="import-heading">Import your payroll workbook</h2></div>
+          <span class="card-subtitle">Excel or CSV · processed on this device</span>
+        </div>
+        <div class="card-body">
+          <div class="drop-zone" id="dropZone">
+            <div>
+              <div class="upload-icon" aria-hidden="true">↑</div>
+              <strong>Drop a workbook here</strong>
+              <p>Supported files: .xlsx, .xls, .xlsm, .csv</p>
+              <label class="button" for="fileInput">Choose a file</label>
+              <input class="file-input" id="fileInput" type="file" accept=".xlsx,.xls,.xlsm,.csv">
+            </div>
+          </div>
+          <div class="file-summary" id="fileSummary">
+            <div class="file-meta"><div class="file-badge">XLSX</div><div><div class="file-name" id="fileName"></div><div class="file-details" id="fileDetails"></div></div></div>
+            <button class="text-button" type="button" id="removeFile">Remove file</button>
+          </div>
+          <div id="importError" class="alert error" role="alert"></div>
+          <div class="controls hidden" id="workbookControls">
+            <div class="field"><label for="sheetSelect">Worksheet</label><select id="sheetSelect"></select><small>Choose the sheet that contains employee rows.</small></div>
+            <div class="field"><label for="headerRow">Header row</label><select id="headerRow"></select><small>Pick the row containing the column names.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="mappingCard" aria-labelledby="mapping-heading">
+        <div class="card-head">
+          <div class="card-title"><span class="section-number">02</span><h2 id="mapping-heading">Match your spreadsheet columns</h2></div>
+          <span class="card-subtitle">You can change any suggestion</span>
+        </div>
+        <div class="card-body">
+          <div class="mapping-grid" id="mappingGrid"></div>
+          <div class="mapping-note"><span>ⓘ</span><span><b>Salary check:</b> the expected new salary is calculated from current salary, increment amount, increment rate, and other adjustment. Rows that do not match the final salary are flagged so you can review them.</span></div>
+          <div class="inline-fields">
+            <div class="field"><label for="currencyCode">Currency label <span style="color:#899490;font-weight:450">(optional)</span></label><input type="text" id="currencyCode" placeholder="e.g. MYR, USD, or RM" maxlength="12"><small>Shown beside amounts in the Word file.</small></div>
+            <div class="field"><label for="payBasis">Salary basis</label><select id="payBasis"><option value="">Not specified</option><option>Monthly</option><option>Annual</option><option>Weekly</option><option>Biweekly</option><option>Hourly</option><option>Other</option></select><small>Used as a label only; no rates are converted.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="reviewCard" aria-labelledby="review-heading">
+        <div class="card-head">
+          <div class="card-title"><span class="section-number">03</span><h2 id="review-heading">Review payroll rows</h2></div>
+          <span class="card-subtitle" id="reviewSubTitle">Check before creating the Word file</span>
+        </div>
+        <div class="card-body">
+          <div class="review-toolbar">
+            <div class="stats" id="stats"></div>
+            <div class="search"><input type="text" id="searchInput" placeholder="Find an employee…" aria-label="Find an employee"></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Employee</th><th>Current salary</th><th>Increment</th><th>Other adjustment</th><th>Final salary</th><th>Review</th></tr></thead>
+              <tbody id="previewBody"><tr><td class="table-empty" colspan="6">Upload a workbook and map its columns to see a review.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-foot"><span id="rowCount">No employee rows yet</span><span class="pagination" id="pageControls"><button type="button" id="prevPage">Previous</button><span id="pageLabel"></span><button type="button" id="nextPage">Next</button></span></div>
+          <div class="alert error" id="blockingMessage" role="status"></div>
+          <label class="checkline hidden" id="ackLine"><input type="checkbox" id="ackWarnings"><span>I reviewed the salary differences and other warnings listed above. Include these rows in the Word file.</span></label>
+        </div>
+      </section>
+
+      <section class="card hidden" id="exportCard" aria-labelledby="export-heading">
+        <div class="card-head">
+          <div class="card-title"><span class="section-number">04</span><h2 id="export-heading">Prepare the Word file</h2></div>
+          <span class="card-subtitle">One employee per page</span>
+        </div>
+        <div class="card-body">
+          <div class="export-body">
+            <div>
+              <div class="export-options">
+                <div class="field"><label for="organization">Organization name <span style="color:#899490;font-weight:450">(optional)</span></label><input id="organization" type="text" placeholder="Your organization"></div>
+                <div class="field"><label for="documentTitle">Document heading</label><input id="documentTitle" type="text" value="Compensation adjustment summary" maxlength="80"></div>
+              </div>
+              <label class="checkline"><input type="checkbox" id="includeEmployeeId" checked><span>Include mapped employee ID, department, and effective date where available.</span></label>
+            </div>
+            <div class="export-preview"><h3>What this creates</h3><p>A review copy with one employee on each page, showing current salary, mapped adjustment amounts, final salary, and the source row number. It does not add company policy or legal wording.</p></div>
+          </div>
+          <div class="export-actions">
+            <div class="export-hint" id="exportHint">Upload a workbook and map the employee name, current salary, and final salary columns to continue.</div>
+            <button class="button primary" type="button" id="exportButton" disabled>Download Word file <span aria-hidden="true">↓</span></button>
+          </div>
+          <div class="alert error" id="exportError" role="alert"></div>
+          <div class="alert success" id="exportSuccess" role="status"></div>
+        </div>
+      </section>
+
+      <div class="footer-note" id="privacy"><span class="privacy-dot"></span>Payroll data stays in this browser tab. No workbook rows are sent to a server. Internet access is needed to load the file-handling libraries.</div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+  <script>
+    (() => {
+      "use strict";
+      const $ = (selector) => document.querySelector(selector);
+      const els = {
+        fileInput: $("#fileInput"), dropZone: $("#dropZone"), fileSummary: $("#fileSummary"), fileName: $("#fileName"), fileDetails: $("#fileDetails"), removeFile: $("#removeFile"), importError: $("#importError"),
+        workbookControls: $("#workbookControls"), sheetSelect: $("#sheetSelect"), headerRow: $("#headerRow"), mappingCard: $("#mappingCard"), mappingGrid: $("#mappingGrid"), reviewCard: $("#reviewCard"), exportCard: $("#exportCard"),
+        currencyCode: $("#currencyCode"), payBasis: $("#payBasis"), stats: $("#stats"), previewBody: $("#previewBody"), rowCount: $("#rowCount"), reviewSubTitle: $("#reviewSubTitle"), searchInput: $("#searchInput"),
+        blockingMessage: $("#blockingMessage"), ackLine: $("#ackLine"), ackWarnings: $("#ackWarnings"), exportButton: $("#exportButton"), exportHint: $("#exportHint"), exportError: $("#exportError"), exportSuccess: $("#exportSuccess")
+      };
+      const FIELD_DEFS = [
+        { key: "name", label: "Employee name", required: true, terms: [/employee\s*name/, /staff\s*name/, /full\s*name/, /^name$/i, /^employee$/i, /^staff$/i] },
+        { key: "id", label: "Employee ID", terms: [/employee\s*(id|no\.?)/, /staff\s*(id|no\.?)/, /^id$/i, /personnel\s*(id|no\.?)/] },
+        { key: "role", label: "Job title / department", terms: [/job\s*title/, /position/, /department|dept/, /designation/, /grade/] },
+        { key: "current", label: "Current salary", required: true, terms: [/current.*(salary|pay|wage)/, /(salary|pay|wage).*(current|before|existing|old)/, /present.*salary/, /basic.*salary/, /^salary$/i, /^current$/i] },
+        { key: "increment", label: "Increment amount", terms: [/increment.*(amount|value)?$/, /increase.*(amount|value)?$/, /salary\s*raise/, /increment\s*adjustment/, /raise\s*amount/] },
+        { key: "rate", label: "Increment rate (%)", terms: [/increment.*(%|percent|pct|rate)/, /(increase|salary).*(%|percent|pct|rate)/, /^%$/] },
+        { key: "adjustment", label: "Other adjustment amount", terms: [/other.*adjust/, /additional.*adjust/, /misc.*adjust/, /allowance.*adjust/] },
+        { key: "final", label: "Final salary", required: true, terms: [/final.*(salary|pay|wage)/, /(salary|pay|wage).*(final|after|revised|new|proposed|updated)/, /new.*salary/, /revised.*salary/, /after.*adjust/, /^final$/i] },
+        { key: "date", label: "Effective date", terms: [/effective.*date/, /date.*effective/, /start.*date/, /^effective$/i] }
+      ];
+      const state = { workbook: null, file: null, sheetName: "", rows: [], headers: [], headerIndex: 0, records: [], ready: false, exported: false, page: 0 };
+      const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+      const showAlert = (element, message) => { element.textContent = message; element.classList.toggle("visible", Boolean(message)); };
+      const cleanText = (value) => value == null ? "" : String(value).trim();
+      const cellText = (value) => {
+        if (value == null) return "";
+        if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toLocaleDateString();
+        return String(value).trim();
+      };
+      function setProgress() {
+        const imported = Boolean(state.workbook);
+        const mappings = selectedMappings();
+        const mapped = imported && FIELD_DEFS.filter((field) => field.required).every((field) => mappings[field.key] != null);
+        const hasWarnings = state.records.some((record) => record.warnings.length);
+        const checked = mapped && state.records.length > 0 && !state.records.some((record) => record.blocking.length) && (!hasWarnings || els.ackWarnings.checked);
+        const steps = [["#step1", imported], ["#step2", mapped], ["#step3", checked], ["#step4", state.exported]];
+        const activeIndex = steps.findIndex(([, done]) => !done);
+        steps.forEach(([id, done], index) => {
+          const node = $(id); node.classList.toggle("done", done); node.classList.toggle("active", index === activeIndex);
+          node.querySelector(".step-num").textContent = done ? "✓" : id.slice(-1);
+        });
+      }
+      function headerSuggestion(header, key) {
+        const text = cleanText(header).toLowerCase();
+        const def = FIELD_DEFS.find((field) => field.key === key);
+        if (!text || !def) return false;
+        if (key === "rate" && !/(%|percent|pct|rate)/i.test(text)) return false;
+        if (key === "increment" && /(percent|pct|%|rate)/i.test(text)) return false;
+        if (key === "adjustment" && /(increment|raise|increase)/i.test(text)) return false;
+        return def.terms.some((term) => term.test(text));
+      }
+      function renderMappings() {
+        const html = FIELD_DEFS.map((field) => {
+          const options = [`<option value="">Not mapped</option>`, ...state.headers.map((header, index) => `<option value="${index}">${escapeHtml(header || `Column ${index + 1}`)} · ${columnLetter(index)}</option>`)].join("");
+          return `<div class="field"><label for="map-${field.key}">${escapeHtml(field.label)}${field.required ? '<span class="req">*</span>' : ""}</label><select id="map-${field.key}" data-field="${field.key}">${options}</select></div>`;
+        }).join("");
+        els.mappingGrid.innerHTML = html;
+        FIELD_DEFS.forEach((field) => {
+          const select = $(`#map-${field.key}`);
+          const match = state.headers.findIndex((header) => headerSuggestion(header, field.key));
+          if (match >= 0) select.value = String(match);
+          select.addEventListener("change", refreshReview);
+        });
+        els.mappingCard.classList.remove("hidden");
+        refreshReview();
+      }
+      function columnLetter(index) {
+        let n = index + 1, name = "";
+        while (n) { const r = (n - 1) % 26; name = String.fromCharCode(65 + r) + name; n = Math.floor((n - 1) / 26); }
+        return name;
+      }
+      function selectedMappings() {
+        return Object.fromEntries(FIELD_DEFS.map((field) => {
+          const select = $(`#map-${field.key}`);
+          return [field.key, select && select.value !== "" ? Number(select.value) : null];
+        }));
+      }
+      function parseMoney(value) {
+        if (typeof value === "number" && Number.isFinite(value)) return value;
+        if (typeof value !== "string") return null;
+        const source = value.trim();
+        if (!source) return null;
+        const negative = /^\(.*\)$/.test(source) || source.includes("-");
+        const cleaned = source.replace(/[()]/g, "").replace(/,/g, "").replace(/[^\d.]/g, "");
+        if (!cleaned || !/^(\d+\.?\d*|\.\d+)$/.test(cleaned)) return null;
+        const amount = Number(cleaned) * (negative ? -1 : 1);
+        return Number.isFinite(amount) ? amount : null;
+      }
+      function dateText(value) {
+        if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toLocaleDateString();
+        if (typeof value === "number" && window.XLSX?.SSF?.parse_date_code) {
+          const date = XLSX.SSF.parse_date_code(value);
+          if (date) return `${String(date.d).padStart(2,"0")}/${String(date.m).padStart(2,"0")}/${date.y}`;
+        }
+        return cleanText(value);
+      }
+      function analyzeRows() {
+        if (!state.rows.length || !state.headers.length || !$("#map-name")) return [];
+        const mapping = selectedMappings();
+        const usedRows = state.rows.slice(state.headerIndex + 1);
+        return usedRows.map((cells, offset) => {
+          const rowNumber = state.headerIndex + offset + 2;
+          const get = (key) => mapping[key] == null ? "" : cells[mapping[key]];
+          const hasContent = cells.some((value) => cleanText(value) !== "");
+          if (!hasContent) return null;
+          const name = cellText(get("name"));
+          const employeeId = cellText(get("id"));
+          const current = parseMoney(get("current"));
+          const increment = mapping.increment == null || cleanText(get("increment")) === "" ? 0 : parseMoney(get("increment"));
+          const rate = mapping.rate == null || cleanText(get("rate")) === "" ? 0 : parseMoney(get("rate"));
+          const adjustment = mapping.adjustment == null || cleanText(get("adjustment")) === "" ? 0 : parseMoney(get("adjustment"));
+          const finalSalary = parseMoney(get("final"));
+          const expected = current == null ? null : current + (increment ?? 0) + current * (rate ?? 0) / 100 + (adjustment ?? 0);
+          const blocking = [], warnings = [];
+          if (!name) blocking.push("Missing employee name");
+          if (current == null) blocking.push("Missing or non-numeric current salary");
+          if (finalSalary == null) blocking.push("Missing or non-numeric final salary");
+          if (increment == null) blocking.push("Increment amount is not numeric");
+          if (rate == null) blocking.push("Increment rate is not numeric");
+          if (adjustment == null) blocking.push("Other adjustment is not numeric");
+          if (current != null && current < 0) warnings.push("Negative current salary");
+          if (finalSalary != null && finalSalary < 0) warnings.push("Negative final salary");
+          if (expected != null && finalSalary != null && Math.abs(expected - finalSalary) > 0.01) warnings.push(`Calculated ${formatMoney(expected)}; sheet shows ${formatMoney(finalSalary)}`);
+          return { rowNumber, name, employeeId, role: cellText(get("role")), current, increment, rate, adjustment, finalSalary, expected, effectiveDate: dateText(get("date")), blocking, warnings, hasContent };
+        }).filter(Boolean).map((record) => ({ ...record }));
+      }
+      function formatMoney(value) {
+        if (value == null || !Number.isFinite(value)) return "—";
+        const amount = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+        const currency = cleanText(els.currencyCode.value);
+        return currency ? `${currency} ${amount}` : amount;
+      }
+      function renderReview() {
+        state.records = analyzeRows();
+        const firstKey = (record) => cleanText(record.employeeId).toLocaleLowerCase() || cleanText(record.name).toLocaleLowerCase();
+        const counts = new Map();
+        state.records.forEach((record) => { const key = firstKey(record); if (key) counts.set(key, (counts.get(key) || 0) + 1); });
+        state.records.forEach((record) => { if (firstKey(record) && counts.get(firstKey(record)) > 1) record.blocking.push("Duplicate employee ID/name"); });
+        const noRows = state.records.length === 0;
+        const rowBlocks = state.records.filter((record) => record.blocking.length).length;
+        const rowWarnings = state.records.filter((record) => !record.blocking.length && record.warnings.length).length;
+        const readyCount = state.records.length - rowBlocks - rowWarnings;
+        const hasRequiredMappings = FIELD_DEFS.filter((field) => field.required).every((field) => selectedMappings()[field.key] != null);
+        els.stats.innerHTML = `<span class="stat"><b>${state.records.length}</b> employees</span><span class="stat"><b>${readyCount}</b> ready</span><span class="stat warn"><b>${rowWarnings}</b> need review</span><span class="stat error"><b>${rowBlocks}</b> blocked</span>`;
+        const filtered = filteredRecords();
+        const pageCount = Math.max(1, Math.ceil(filtered.length / 50));
+        state.page = Math.min(state.page, pageCount - 1);
+        const start = state.page * 50;
+        els.rowCount.textContent = filtered.length ? `Showing ${start + 1}–${Math.min(start + 50, filtered.length)} of ${filtered.length} matched · ${state.records.length} total` : "No employee rows found after the selected header";
+        $("#pageLabel").textContent = filtered.length ? `Page ${state.page + 1} of ${pageCount}` : "";
+        $("#prevPage").disabled = state.page === 0 || !filtered.length;
+        $("#nextPage").disabled = state.page >= pageCount - 1 || !filtered.length;
+        $("#pageControls").classList.toggle("hidden", filtered.length <= 50);
+        els.reviewSubTitle.textContent = state.records.length ? `Source: ${state.sheetName} · ${state.records.length} employee rows` : "Check the worksheet and header row";
+        const query = els.searchInput.value.trim().toLocaleLowerCase();
+        const shown = filtered.slice(start, start + 50);
+        els.previewBody.innerHTML = shown.length ? shown.map((record) => {
+          const incrementText = [record.increment ? formatMoney(record.increment) : "", record.rate ? `${record.rate}%` : ""].filter(Boolean).join(" + ") || "—";
+          const status = record.blocking.length ? ["Blocked", "error", record.blocking.join("; ")] : record.warnings.length ? ["Review", "warn", record.warnings.join("; ")] : ["Ready", "ok", "Amounts reconcile"];
+          return `<tr><td title="Source row ${record.rowNumber}">${escapeHtml(record.name || "(name missing)")}</td><td>${formatMoney(record.current)}</td><td>${escapeHtml(incrementText)}</td><td>${record.adjustment ? formatMoney(record.adjustment) : "—"}</td><td>${formatMoney(record.finalSalary)}</td><td class="status-cell"><span class="status ${status[1]}">${status[0]}</span>${record.blocking.length || record.warnings.length ? `<div class="status-detail">${escapeHtml([...record.blocking, ...record.warnings].join("; "))}</div>` : ""}</td></tr>`;
+        }).join("") : `<tr><td class="table-empty" colspan="6">${noRows ? "No employee rows found. Check the selected header row." : "No employees match this search."}</td></tr>`;
+        const blockingReasons = [];
+        if (!hasRequiredMappings) blockingReasons.push("Map Employee name, Current salary, and Final salary.");
+        if (!state.records.length) blockingReasons.push("No employee rows were found.");
+        if (rowBlocks) blockingReasons.push(`${rowBlocks} row${rowBlocks === 1 ? " has" : "s have"} blocking errors. Fix the source or mappings and review again.`);
+        showAlert(els.blockingMessage, blockingReasons.join(" "));
+        const hasWarnings = rowWarnings > 0;
+        els.ackLine.classList.toggle("hidden", !hasWarnings || Boolean(rowBlocks));
+        if (!hasWarnings) els.ackWarnings.checked = false;
+        const canExport = hasRequiredMappings && state.records.length > 0 && rowBlocks === 0 && (!hasWarnings || els.ackWarnings.checked);
+        state.ready = canExport;
+        els.exportButton.disabled = !canExport;
+        els.exportHint.textContent = !hasRequiredMappings ? "Map employee name, current salary, and final salary to continue." : rowBlocks ? "Resolve all blocked rows before creating the Word file." : hasWarnings && !els.ackWarnings.checked ? "Review the flagged salary differences and acknowledge them to continue." : canExport ? `${state.records.length} employee pages are ready.` : "Add employee rows to continue.";
+        setProgress();
+      }
+      function filteredRecords() {
+        const query = els.searchInput.value.trim().toLocaleLowerCase();
+        return state.records.filter((record) => !query || `${record.name} ${record.employeeId} ${record.role}`.toLocaleLowerCase().includes(query));
+      }
+      function refreshReview() {
+        if (!state.workbook) return;
+        const mappings = document.querySelectorAll("#mappingGrid select");
+        if (!mappings.length) return;
+        state.exported = false;
+        els.reviewCard.classList.remove("hidden");
+        els.exportCard.classList.remove("hidden");
+        renderReview();
+      }
+      function setHeaders() {
+        const rawRows = state.rows;
+        const nonEmpty = rawRows.map((row, index) => ({ row, index })).filter(({row}) => row.some((cell) => cleanText(cell) !== "")).slice(0, 60);
+        els.headerRow.innerHTML = nonEmpty.map(({row, index}) => `<option value="${index}">Row ${index + 1}: ${escapeHtml(row.map(cleanText).filter(Boolean).slice(0, 4).join(" · ") || "Blank")}</option>`).join("");
+        const guessed = nonEmpty.find(({row}) => row.filter((cell) => typeof cell === "string" && cleanText(cell)).length >= 2)?.index ?? nonEmpty[0]?.index ?? 0;
+        els.headerRow.value = String(guessed);
+        state.headerIndex = guessed;
+        updateHeaderMapping();
+      }
+      function updateHeaderMapping() {
+        state.headerIndex = Number(els.headerRow.value || 0);
+        const headerRow = state.rows[state.headerIndex] || [];
+        const maxColumns = Math.max(headerRow.length, ...state.rows.slice(state.headerIndex + 1, state.headerIndex + 6).map((row) => row.length), 0);
+        state.headers = Array.from({length: maxColumns}, (_, index) => cleanText(headerRow[index]) || `Column ${columnLetter(index)}`);
+        renderMappings();
+      }
+      async function loadFile(file) {
+        showAlert(els.importError, "");
+        if (!file) return;
+        resetWorkbook();
+        if (!window.XLSX) { showAlert(els.importError, "The Excel reader could not load. Connect to the internet, refresh the page, and try again."); return; }
+        try {
+          const bytes = await file.arrayBuffer();
+          const workbook = XLSX.read(bytes, { type: "array", cellDates: true });
+          if (!workbook.SheetNames.length) throw new Error("No worksheets were found in this file.");
+          state.file = file; state.workbook = workbook; state.sheetName = workbook.SheetNames[0];
+          els.sheetSelect.innerHTML = workbook.SheetNames.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+          els.workbookControls.classList.remove("hidden");
+          els.fileName.textContent = file.name;
+          els.fileDetails.textContent = `${workbook.SheetNames.length} worksheet${workbook.SheetNames.length === 1 ? "" : "s"} · ${formatBytes(file.size)}`;
+          const ext = file.name.split(".").pop().toUpperCase();
+          els.fileSummary.querySelector(".file-badge").textContent = ext.slice(0, 4);
+          els.fileSummary.classList.add("visible"); els.dropZone.classList.add("hidden");
+          loadSheet(state.sheetName);
+        } catch (error) {
+          resetWorkbook();
+          showAlert(els.importError, `Could not read this workbook. ${error.message || "Check that the file is a valid Excel or CSV file."}`);
+        }
+      }
+      function resetWorkbook() {
+        state.workbook = null; state.file = null; state.rows = []; state.headers = []; state.records = []; state.ready = false; state.exported = false; state.page = 0;
+        els.fileInput.value = ""; els.fileSummary.classList.remove("visible"); els.dropZone.classList.remove("hidden"); els.workbookControls.classList.add("hidden");
+        els.mappingCard.classList.add("hidden"); els.reviewCard.classList.add("hidden"); els.exportCard.classList.add("hidden");
+        setProgress();
+      }
+      function loadSheet(name) {
+        const worksheet = state.workbook?.Sheets[name];
+        if (!worksheet) return;
+        state.sheetName = name;
+        state.rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: true, blankrows: true });
+        els.headerRow.innerHTML = "";
+        setHeaders();
+        els.mappingCard.classList.remove("hidden"); els.reviewCard.classList.remove("hidden"); els.exportCard.classList.remove("hidden");
+        refreshReview();
+      }
+      function formatBytes(bytes) {
+        if (!bytes) return "0 bytes";
+        const units = ["bytes", "KB", "MB", "GB"]; const power = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+        return `${(bytes / Math.pow(1024, power)).toFixed(power ? 1 : 0)} ${units[power]}`;
+      }
+      function textCell(text, options = {}) {
+        return new docx.TableCell({
+          width: { size: options.width || 50, type: docx.WidthType.PERCENTAGE },
+          margins: { top: 95, bottom: 95, left: 130, right: 130 },
+          shading: options.shade ? { fill: "F3F7F5", type: docx.ShadingType.CLEAR } : undefined,
+          borders: {
+            top: { style: docx.BorderStyle.SINGLE, size: 3, color: "E4EBE7" },
+            bottom: { style: docx.BorderStyle.SINGLE, size: 3, color: "E4EBE7" },
+            left: { style: docx.BorderStyle.SINGLE, size: 3, color: "E4EBE7" },
+            right: { style: docx.BorderStyle.SINGLE, size: 3, color: "E4EBE7" }
+          },
+          children: [new docx.Paragraph({ children: [new docx.TextRun({ text, bold: Boolean(options.bold), color: options.color || "243630", size: 20, font: "Aptos" })] })]
+        });
+      }
+      function infoTable(rows, headers = null) {
+        const all = headers ? [headers, ...rows] : rows;
+        return new docx.Table({
+          width: { size: 100, type: docx.WidthType.PERCENTAGE },
+          columnWidths: [5000, 5000],
+          rows: all.map((row, index) => new docx.TableRow({
+            cantSplit: true,
+            children: row.map((value, col) => textCell(String(value), { shade: index === 0 || index % 2 === 0, bold: Boolean(headers && index === 0) }))
+          }))
+        });
+      }
+      function para(text, options = {}) {
+        return new docx.Paragraph({
+          alignment: options.center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
+          spacing: { before: options.before ?? 0, after: options.after ?? 120, line: 276 },
+          pageBreakBefore: Boolean(options.pageBreakBefore),
+          children: [new docx.TextRun({ text, bold: Boolean(options.bold), color: options.color || "243630", size: options.size || 22, font: "Aptos", allCaps: Boolean(options.caps) })]
+        });
+      }
+      async function buildDocument() {
+        showAlert(els.exportError, ""); showAlert(els.exportSuccess, "");
+        if (!window.docx) { showAlert(els.exportError, "The Word document builder could not load. Connect to the internet, refresh the page, and try again."); return; }
+        if (!state.ready) { showAlert(els.exportError, "Resolve blocked rows and review flagged amounts before exporting."); return; }
+        const org = cleanText($("#organization").value);
+        const heading = cleanText($("#documentTitle").value) || "Compensation adjustment summary";
+        const includeMeta = $("#includeEmployeeId").checked;
+        const basis = cleanText(els.payBasis.value);
+        const title = `${heading}${basis ? ` · ${basis}` : ""}`;
+        const amountLabel = (name) => `${name}${basis ? ` (${basis.toLowerCase()})` : ""}`;
+        const children = [];
+        state.records.forEach((record, index) => {
+          children.push(para(org || "PAYROLL RECORD", { size: 16, color: "126B55", caps: true, after: 140, pageBreakBefore: index > 0 }));
+          children.push(para(heading, { size: 34, bold: true, after: 100 }));
+          children.push(para("COMPENSATION CHANGE · INTERNAL REVIEW COPY", { size: 15, color: "718079", caps: true, after: 270 }));
+          children.push(para(record.name || "Employee", { size: 26, bold: true, after: 70 }));
+          if (includeMeta) {
+            const meta = [record.employeeId && `ID: ${record.employeeId}`, record.role, record.effectiveDate && `Effective: ${record.effectiveDate}`].filter(Boolean).join("   ·   ");
+            if (meta) children.push(para(meta, { size: 17, color: "66746E", after: 230 }));
+          }
+          const salaryRows = [];
+          salaryRows.push([amountLabel("Current salary"), formatMoney(record.current)]);
+          if (record.increment) salaryRows.push(["Increment amount", formatMoney(record.increment)]);
+          if (record.rate) salaryRows.push(["Increment rate", `${record.rate}%`]);
+          if (record.adjustment) salaryRows.push(["Other adjustment", formatMoney(record.adjustment)]);
+          salaryRows.push([amountLabel("Final salary"), formatMoney(record.finalSalary)]);
+          salaryRows.push(["Net change", formatMoney(record.finalSalary - record.current)]);
+          children.push(infoTable(salaryRows, ["Salary detail", "Amount"]));
+          children.push(para(`Source worksheet row ${record.rowNumber}`, { size: 16, color: "718079", before: 170, after: 40 }));
+          if (record.warnings.length) children.push(para(`Review note: ${record.warnings.join("; ")}`, { size: 16, color: "8A5D0B", after: 150 }));
+          children.push(para("Prepared by: ______________________________     Checked by: ______________________________", { size: 15, color: "65736E", before: 370, after: 0 }));
+        });
+        const doc = new docx.Document({
+          creator: "Payflow Payroll Converter",
+          title,
+          description: "Payroll salary adjustment review copy created from a locally processed workbook.",
+          sections: [{ properties: { page: { margin: { top: 1000, right: 1000, bottom: 1000, left: 1000 } } }, children }]
+        });
+        els.exportButton.disabled = true; els.exportButton.textContent = "Preparing Word file…";
+        try {
+          const blob = await docx.Packer.toBlob(doc);
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url; link.download = "payroll-adjustment-summary.docx"; document.body.appendChild(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          state.exported = true; setProgress();
+          showAlert(els.exportSuccess, `Word file created with ${state.records.length} employee pages.`);
+        } catch (error) {
+          showAlert(els.exportError, `Could not prepare the Word file. ${error.message || "Please try again."}`);
+        } finally {
+          els.exportButton.innerHTML = 'Download Word file <span aria-hidden="true">↓</span>';
+          els.exportButton.disabled = !state.ready;
+        }
+      }
+
+      els.fileInput.addEventListener("change", (event) => loadFile(event.target.files[0]));
+      els.dropZone.addEventListener("dragover", (event) => { event.preventDefault(); els.dropZone.classList.add("dragover"); });
+      els.dropZone.addEventListener("dragleave", () => els.dropZone.classList.remove("dragover"));
+      els.dropZone.addEventListener("drop", (event) => { event.preventDefault(); els.dropZone.classList.remove("dragover"); loadFile(event.dataTransfer.files[0]); });
+      els.removeFile.addEventListener("click", () => {
+        resetWorkbook(); showAlert(els.importError, "");
+      });
+      els.sheetSelect.addEventListener("change", () => loadSheet(els.sheetSelect.value));
+      els.headerRow.addEventListener("change", updateHeaderMapping);
+      els.currencyCode.addEventListener("input", refreshReview);
+      els.payBasis.addEventListener("change", refreshReview);
+      els.searchInput.addEventListener("input", () => { state.page = 0; renderReview(); });
+      $("#prevPage").addEventListener("click", () => { if (state.page > 0) { state.page--; renderReview(); } });
+      $("#nextPage").addEventListener("click", () => { state.page++; renderReview(); });
+      els.ackWarnings.addEventListener("change", renderReview);
+      els.exportButton.addEventListener("click", buildDocument);
+      setProgress();
+    })();
+  </script>
+</body>
+</html>

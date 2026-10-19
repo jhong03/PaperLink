@@ -1,0 +1,7 @@
+Salary adjustment notice
+
+Dear [Employee name],
+
+Current salary: [Current salary]
+Final salary: [Final salary]
+Effective date: [Effective date]

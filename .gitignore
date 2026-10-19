@@ -1,0 +1,30 @@
+node_modules/
+dist/
+release/
+.npm-cache/
+.cache/
+test-results/
+*.log
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+paperlink-email-settings.json
+paperlink-email-history.json
+
+# Personal work and reusable document exports
+*.paperlink
+*.flowdesk
+*.papertemplate
+*.flowtemplate
+
+# Operating system and editor files
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,75 @@
+<dialog id="emailDialog" aria-labelledby="emailHeading">
+  <form method="dialog">
+    <div class="dialog-heading"><div><span class="eyebrow">PREPARE, REVIEW, THEN SEND</span><h2 id="emailHeading">Email documents</h2></div><button type="button" data-email-close aria-label="Close email documents">×</button></div>
+    <p class="email-intro">Review each email and its document, then send from PaperLink using your company email server. You can also save drafts for your email app.</p>
+    <div class="email-layout">
+      <section class="email-settings" aria-label="Email settings">
+        <h3>1. Set up the emails</h3>
+        <label>How many emails?<select id="emailMode" aria-describedby="emailScopeHint"><option value="single">One email</option><option value="batch">One email per spreadsheet row</option></select></label>
+        <p id="emailScopeHint" class="small-note">Choose one email per row to send each person their own document.</p>
+        <label>Sender address<input id="emailFrom" type="text" maxlength="254" autocomplete="email" placeholder="e.g. hr@company.com" spellcheck="false"></label>
+        <p class="small-note">Use an address your company allows this account to send from.</p>
+        <details id="emailSmtpSettings" class="email-server-settings"><summary>Email server settings</summary>
+          <p class="small-note">Ask IT for your outgoing SMTP server settings. Passwords are kept separately from saved work and templates.</p>
+          <label>SMTP server<input id="emailSmtpHost" maxlength="253" placeholder="e.g. smtp.company.com" spellcheck="false" autocomplete="off"></label>
+          <div class="export-grid"><label>Port<input id="emailSmtpPort" type="number" min="1" max="65535" value="587"></label><label>Connection security<select id="emailSmtpSecurity"><option value="starttls">STARTTLS (usually 587)</option><option value="tls">SSL/TLS (usually 465)</option><option value="plain">Unencrypted company relay</option></select></label></div>
+          <label>Login method<select id="emailSmtpAuth"><option value="password">Username and password</option><option value="none">No login (company relay)</option></select></label>
+          <label>SMTP username<input id="emailSmtpUser" maxlength="512" placeholder="Usually your email address" autocomplete="username" spellcheck="false"></label>
+          <label>Password / app password<input id="emailSmtpPassword" type="password" maxlength="4096" autocomplete="off" placeholder="Enter the SMTP password"></label>
+          <label class="email-remember"><input id="emailSmtpRemember" type="checkbox">Remember password securely on this computer</label>
+          <div class="email-preview-actions"><button type="button" id="emailSmtpSave">Save settings</button><button type="button" id="emailSmtpVerify">Test connection</button><button type="button" id="emailSmtpForget">Forget password</button></div>
+          <label class="email-test-recipient">Send a test email to<input id="emailTestTo" maxlength="254" placeholder="Your own email address" spellcheck="false"></label>
+          <button type="button" id="emailSendTest">Send test email</button><p class="small-note">The test message has no payroll data, attachments, or CC. Test connection checks the server and login without sending a message.</p>
+          <div id="emailSmtpStatus" class="small-note" role="status"></div>
+        </details>
+        <label>Read spreadsheet information from<select id="emailSheet"></select></label>
+        <label id="emailHeaderRowLabel">Row containing column headings<input id="emailHeaderRow" type="number" min="1" max="1048575" value="1"></label>
+        <label id="emailSingleRowLabel">Use information from spreadsheet row<input id="emailSingleRow" type="number" min="1" max="1048576" value="2"></label>
+        <label id="emailRowsLabel">Spreadsheet rows to include<input id="emailRows" placeholder="All filled rows, or e.g. 2-5, 8" maxlength="200"></label>
+        <div id="emailModeHint" class="small-note"></div>
+        <label>Subject<input id="emailSubject" maxlength="600" placeholder="e.g. Salary adjustment notice"></label>
+        <label>Message<textarea id="emailBody" rows="6" maxlength="20000" placeholder="Write your message here."></textarea></label>
+        <h3>2. Attach the document</h3>
+        <div class="export-grid"><label>Attachment format<select id="emailFormat"><option value="pdf">PDF document</option><option value="docx">Word document</option></select></label><label>Name files using<select id="emailNameColumn"></select></label></div>
+        <label>Text before each file name (optional)<input id="emailNamePrefix" maxlength="80" placeholder="e.g. Salary notice"></label>
+        <div class="email-protection-settings">
+          <label>Password protection<select id="emailProtection"><option value="none">No password</option><option value="shared">Use one password for all attachments</option><option value="column">Use each person's password from a spreadsheet column</option></select></label>
+          <div id="emailSharedPasswordFields" class="hidden"><label>Document password<input id="emailDocumentPassword" type="password" maxlength="64" autocomplete="new-password" spellcheck="false"></label><label>Confirm document password<input id="emailDocumentPasswordConfirm" type="password" maxlength="64" autocomplete="new-password" spellcheck="false"></label></div>
+          <label id="emailPasswordColumnLabel" class="hidden">Column containing document passwords<select id="emailPasswordColumn"></select></label>
+          <p id="emailProtectionHint" class="small-note"></p>
+        </div>
+        <p class="small-note">Each draft gets only its own document. All pages of that document are included. Matching file names get numbered automatically.</p>
+        <p id="emailDocumentHint" class="small-note"></p>
+      </section>
+      <section class="email-review" aria-label="Email preview">
+        <h3>3. Review each email</h3>
+        <div id="emailCount" class="small-note" role="status"></div>
+        <p class="small-note">Enter or edit To and CC directly in the email below. Each email keeps its own addresses. Separate several addresses with a semicolon.</p>
+        <details id="emailAddressSources" class="email-address-sources"><summary>Fill addresses from spreadsheet columns (optional)</summary><div class="export-grid"><label>To addresses from<select id="emailToColumn" aria-label="Spreadsheet column for To addresses"></select></label><label>CC addresses from<select id="emailCcColumn" aria-label="Spreadsheet column for CC addresses"></select></label></div><p class="small-note">Each row supplies its own addresses. Edits made directly in an email are kept until you choose Reset addresses for that email.</p></details>
+        <details id="emailMailingList" class="email-mailing-list hidden" open><summary>Recipients and their attachments</summary><div class="email-mailing-scroll" tabindex="0" aria-label="Recipient and attachment for every spreadsheet row"><table><thead><tr><th scope="col">Row</th><th scope="col">To / CC</th><th scope="col">Attachment</th><th scope="col">Review</th></tr></thead><tbody id="emailMailingRows"></tbody></table></div></details>
+        <div class="email-record-controls"><button type="button" id="emailPrevious" aria-label="Previous email">←</button><select id="emailPreviewRow" aria-label="Choose an email to review"></select><button type="button" id="emailNext" aria-label="Next email">→</button></div>
+        <div id="emailPreviewEmpty" class="email-preview-empty">Choose your spreadsheet rows to see the emails here.</div>
+        <article id="emailPreview" class="email-preview hidden">
+          <dl class="email-headers">
+            <div><dt>From</dt><dd id="emailPreviewFrom"></dd><button type="button" data-email-copy="from" aria-label="Copy sender address">Copy</button></div>
+            <div><dt><label for="emailPreviewTo">To</label></dt><dd><input id="emailPreviewTo" type="text" maxlength="4000" placeholder="e.g. employee@company.com" spellcheck="false" autocomplete="off" aria-describedby="emailAddressEditHint emailPreviewToError"><small id="emailPreviewToError" class="email-address-error" role="status"></small></dd><button type="button" data-email-copy="to" aria-label="Copy recipient addresses">Copy</button></div>
+            <div><dt><label for="emailPreviewCc">CC</label></dt><dd><input id="emailPreviewCc" type="text" maxlength="4000" placeholder="Optional: e.g. manager@company.com" spellcheck="false" autocomplete="off" aria-describedby="emailAddressEditHint emailPreviewCcError"><small id="emailPreviewCcError" class="email-address-error" role="status"></small></dd><button type="button" data-email-copy="cc" aria-label="Copy CC addresses">Copy</button></div>
+            <div><dt>Subject</dt><dd id="emailPreviewSubject"></dd><button type="button" data-email-copy="subject" aria-label="Copy subject">Copy</button></div>
+          </dl>
+          <div class="email-address-edit-note"><span id="emailAddressEditHint" class="small-note"></span><button type="button" id="emailResetAddresses" class="hidden">Reset addresses</button></div>
+          <pre id="emailPreviewBody" class="email-message"></pre>
+          <button type="button" data-email-copy="body">Copy message</button>
+          <div class="email-attachment"><strong>Attachment</strong><span id="emailPreviewAttachment"></span><small id="emailAttachmentStatus">Choose Prepare emails to create the attachment.</small></div>
+          <p id="emailAttachmentProtection" class="small-note"></p>
+          <details id="emailDocumentPreview" class="email-document-preview"><summary>Preview this person's document</summary><p id="emailDocumentPreviewStatus" class="small-note" role="status"></p><div id="emailDocumentViewport" tabindex="0" aria-label="Document attachment preview"><div id="emailDocumentPages"></div></div></details>
+          <div class="email-preview-actions"><button type="button" id="emailSendOne" class="primary" disabled>Send this email</button><button type="button" id="emailOpenDraft" disabled>Open this draft</button><button type="button" id="emailSaveOne" disabled>Save this draft</button><button type="button" id="emailSaveAttachment" disabled>Save attachment</button></div>
+        </article>
+        <div id="emailValidation" class="dialog-error hidden" role="alert"></div>
+        <section id="emailSendResults" class="email-send-results hidden" aria-label="Email sending results"><h3>Sending results</h3><div id="emailSendSummary" class="small-note" role="status"></div><div class="email-results-scroll" tabindex="0" aria-label="Sending result for each email"><table><thead><tr><th scope="col">Recipient / document</th><th scope="col">Result</th></tr></thead><tbody id="emailSendResultsBody"></tbody></table></div><p class="small-note">Accepted means the SMTP server accepted the email; it does not confirm inbox delivery. Sending stops on a failure or unconfirmed result. Previous acceptances are skipped unless you explicitly choose to resend.</p></section>
+        <div class="email-compatibility"><strong>Using company email or webmail?</strong><p>Draft files (.eml) open in compatible email apps. Some apps open them as saved messages; choose Edit as new or an equivalent action. For webmail, copy the details above and attach the separate document. Saving the ZIP includes drafts, attachment copies, and email details. Opening a file does not put it in your account's Drafts folder automatically.</p></div>
+      </section>
+    </div>
+    <div id="emailError" class="dialog-error hidden" role="alert"></div>
+    <div class="email-footer"><div><label>ZIP file name<input id="emailZipName" maxlength="160" placeholder="e.g. October email drafts"></label><div id="emailProgress" class="small-note" role="status" aria-live="polite">Prepare attachments before sending document emails.</div></div><div class="dialog-actions"><button type="button" data-email-close>Close</button><button type="button" id="emailPrepare" class="primary">Prepare emails</button><button type="button" id="emailSaveAll" disabled>Save drafts (.zip)</button><button type="button" id="emailSendAll" disabled>Send all emails</button><button type="button" id="emailStopSending" class="hidden">Stop remaining</button></div></div>
+  </form>
+</dialog>
